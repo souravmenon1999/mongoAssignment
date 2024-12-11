@@ -1,0 +1,52 @@
+[
+    {
+      "$match": {
+        "year": { "$lt": 1950 },  
+        "imdb.rating": { "$gte": 7.0 } 
+      }
+    },
+    {
+      "$project": {
+        "_id": 1,
+        "title": 1,
+        "releaseYear": "$year", 
+        "genres": 1,
+        "imdbRating": "$imdb.rating" 
+      }
+    },
+    {
+      "$lookup": {
+        "from": "comments",  
+        "localField": "_id", 
+        "foreignField": "movie_id",
+        "as": "allComments"
+      }
+    },
+    {
+      "$addFields": {
+        "comments": {
+          "$slice": ["$allComments", 2] 
+        }
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "title": 1,
+        "releaseYear": 1,
+        "genres": 1,
+        "imdbRating": 1,
+        "comments": {
+          "$map": {
+            "input": "$comments",  
+            "as": "comment",
+            "in": {
+              "name": "$$comment.name",
+              "text": "$$comment.text"
+            }
+          }
+        }
+      }
+    }
+  ]
+  
